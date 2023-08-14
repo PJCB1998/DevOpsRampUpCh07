@@ -1,6 +1,6 @@
 # Challenge  4
 
-1)  Wirte the Dockerfile
+1) Write the Dockerfile
 
 2) Build the Dockerfile 
 
