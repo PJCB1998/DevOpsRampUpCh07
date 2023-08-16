@@ -1,0 +1,72 @@
+version: "3.8"
+services:
+  redis:
+    image: redis:alpine
+    hostname: redis
+  zipkin:
+    image: openzipkin/zipkin
+    hostname: zipkin
+    ports:
+      - 9411:9411
+  todos-api:
+    build: https://github.com/PJCB1998/DevOpsRampUp-todos-api.git
+    image: todos-api
+    hostname: todos-api
+    environment:
+      - TODO_API_PORT=8082
+      - JWT_SECET=PRFT
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_CHANNEL=log_channel
+    depends_on:
+      - auth-api
+      - zipkin
+      - redis
+  users-api:
+    build: https://github.com/PJCB1998/DevOpsRampUp-users-api.git
+    image: users-api
+    hostname: users-api
+    environment:
+      - SERVERT_PORT=8083
+      - JWT_SECRET=PRFT
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin:9411/
+    depends_on:
+      - auth-api
+  auth-api:
+    build: https://github.com/PJCB1998/DevOpsRampUp-auth-api.git
+    image: auth-api
+    hostname: auth-api
+    environment:
+      - AUTH_API_PORT=8000
+      - JWT_SECRET=PRFT
+      - USERS_API_ADDRESS=http://users-api:8083
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+  lmp:
+    build: https://github.com/PJCB1998/DevOpsRampUp-lmp.git
+    image: lmp
+    hostname: lmp
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_CHANNEL=log_channel
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - redis
+  frontend:
+    build: https://github.com/PJCB1998/DevOpsRampUp-frontend.git
+    image: frontend
+    environment:
+      - PORT=8080
+      - AUTH_API_ADDRESS=http://auth-api:8000
+      - TODOS_API_ADDRESS=http://todos-api:8082
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+    ports:
+      - 8080:8080
+    depends_on:
+      - auth-api
+      - users-api
+      - todos-api
+      - redis
+      - zipkin
