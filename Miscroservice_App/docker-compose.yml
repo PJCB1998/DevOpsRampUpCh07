@@ -51,6 +51,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_CHANNEL=log_channel
       - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - PYTHONUNBUFFERED=1
     depends_on:
       - redis
   frontend:
